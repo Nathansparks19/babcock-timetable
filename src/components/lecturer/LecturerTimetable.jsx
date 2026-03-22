@@ -8,7 +8,6 @@ export default function LecturerTimetable({ profile }) {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedDay, setSelectedDay] = useState('Monday')
-  const [rescheduling, setRescheduling] = useState(null)
   const [cancelling, setCancelling] = useState(null)
 
   useEffect(() => { fetchEntries() }, [])
@@ -23,27 +22,31 @@ export default function LecturerTimetable({ profile }) {
     setLoading(false)
   }
 
-  const handleCancelClass = async (entry) => {
-    if (!confirm(`Cancel ${entry.course?.code} on ${entry.time_slot?.day}? All students will be notified.`)) return
-    setCancelling(entry.id)
-
-    // Get all registered students
+  const handleStatusChange = async (entry, newStatus) => {
+    await supabase.from('timetable_entries').update({ status: newStatus }).eq('id', entry.id)
     const { data: students } = await supabase
-      .from('student_courses')
-      .select('student_id')
-      .eq('course_id', entry.course_id)
-
-    // Delete the entry
-    await supabase.from('timetable_entries').delete().eq('id', entry.id)
-
-    // Notify all students
-    const message = `⚠️ Class Cancelled: ${entry.course?.code} - ${entry.course?.name} scheduled for ${entry.time_slot?.day} at ${entry.time_slot?.start_time} has been cancelled by ${profile.name}.`
-    if (students) {
-      for (const s of students) {
-        await sendNotification(s.student_id, message)
-      }
+      .from('student_courses').select('student_id').eq('course_id', entry.course_id)
+    const messages = {
+      cancelled: `⚠️ Class Cancelled: ${entry.course?.code} on ${entry.time_slot?.day} at ${entry.time_slot?.start_time} has been cancelled by ${profile.name}.`,
+      rescheduled: `🔄 Class Rescheduled: ${entry.course?.code} on ${entry.time_slot?.day} has been marked for rescheduling by ${profile.name}.`,
+      scheduled: `✅ Class Restored: ${entry.course?.code} on ${entry.time_slot?.day} is back on schedule.`,
     }
+    if (students) {
+      for (const s of students) await sendNotification(s.student_id, messages[newStatus])
+    }
+    fetchEntries()
+  }
 
+  const handleCancelClass = async (entry) => {
+    if (!confirm(`Remove ${entry.course?.code} from timetable? All students will be notified.`)) return
+    setCancelling(entry.id)
+    const { data: students } = await supabase
+      .from('student_courses').select('student_id').eq('course_id', entry.course_id)
+    await supabase.from('timetable_entries').delete().eq('id', entry.id)
+    const message = `⚠️ Class Removed: ${entry.course?.code} - ${entry.course?.name} on ${entry.time_slot?.day} has been removed from the timetable.`
+    if (students) {
+      for (const s of students) await sendNotification(s.student_id, message)
+    }
     setCancelling(null)
     fetchEntries()
   }
@@ -101,9 +104,22 @@ export default function LecturerTimetable({ profile }) {
           {dayEntries
             .sort((a, b) => a.time_slot?.start_time?.localeCompare(b.time_slot?.start_time))
             .map(entry => (
-              <div key={entry.id} style={styles.classCard}>
+              <div key={entry.id} style={{
+                ...styles.classCard,
+                borderColor: entry.status === 'cancelled' ? 'rgba(224,82,82,0.3)' :
+                  entry.status === 'rescheduled' ? 'rgba(247,151,30,0.3)' : 'rgba(255,255,255,0.08)'
+              }}>
                 <div style={styles.timeBar}>
                   <span style={styles.time}>{formatTime(entry.time_slot?.start_time)} — {formatTime(entry.time_slot?.end_time)}</span>
+                  {entry.status && entry.status !== 'scheduled' && (
+                    <span style={{
+                      fontSize: '11px', fontWeight: '600', padding: '3px 8px', borderRadius: '10px',
+                      background: entry.status === 'cancelled' ? 'rgba(224,82,82,0.2)' : 'rgba(247,151,30,0.2)',
+                      color: entry.status === 'cancelled' ? '#e05252' : '#f7971e',
+                    }}>
+                      {entry.status === 'cancelled' ? '❌ Cancelled' : '🔄 Rescheduled'}
+                    </span>
+                  )}
                 </div>
                 <div style={styles.classBody}>
                   <div style={styles.classInfo}>
@@ -115,12 +131,21 @@ export default function LecturerTimetable({ profile }) {
                     </div>
                   </div>
                   <div style={styles.classActions}>
+                    <select
+                      style={styles.statusSelect}
+                      value={entry.status || 'scheduled'}
+                      onChange={e => handleStatusChange(entry, e.target.value)}
+                    >
+                      <option value="scheduled">✅ Scheduled</option>
+                      <option value="cancelled">❌ Cancelled</option>
+                      <option value="rescheduled">🔄 Rescheduled</option>
+                    </select>
                     <button
                       style={styles.cancelBtn}
                       onClick={() => handleCancelClass(entry)}
                       disabled={cancelling === entry.id}
                     >
-                      {cancelling === entry.id ? 'Cancelling...' : '✕ Cancel Class'}
+                      {cancelling === entry.id ? 'Removing...' : '✕ Remove'}
                     </button>
                   </div>
                 </div>
@@ -147,7 +172,7 @@ const styles = {
   emptyText: { color: 'rgba(255,255,255,0.4)', fontSize: '15px' },
   classList: { display: 'flex', flexDirection: 'column', gap: '12px' },
   classCard: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden' },
-  timeBar: { background: 'var(--gold-pale)', borderBottom: '1px solid var(--gold-border)', padding: '10px 20px' },
+  timeBar: { background: 'var(--gold-pale)', borderBottom: '1px solid var(--gold-border)', padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   time: { color: 'var(--gold)', fontSize: '13px', fontWeight: 'bold' },
   classBody: { padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' },
   classInfo: { flex: 1 },
@@ -156,5 +181,6 @@ const styles = {
   classMeta: { display: 'flex', gap: '20px', flexWrap: 'wrap' },
   metaItem: { color: 'rgba(255,255,255,0.5)', fontSize: '13px' },
   classActions: { display: 'flex', flexDirection: 'column', gap: '8px' },
-  cancelBtn: { padding: '8px 16px', background: 'rgba(224,82,82,0.1)', border: '1px solid rgba(224,82,82,0.2)', borderRadius: '8px', color: '#e05252', fontSize: '12px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' },
+  statusSelect: { padding: '8px 12px', background: '#1e3a4a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '12px', outline: 'none', cursor: 'pointer' },
+  cancelBtn: { padding: '8px 16px', background: 'rgba(224,82,82,0.1)', border: '1px solid rgba(224,82,82,0.2)', borderRadius: '8px', color: '#e05252', fontSize: '12px', fontWeight: '600', cursor: 'pointer' },
 }
