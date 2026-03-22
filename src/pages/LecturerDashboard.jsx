@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 import LecturerTimetable from '../components/lecturer/LecturerTimetable'
 import LecturerAvailability from '../components/lecturer/LecturerAvailability'
+import LecturerSwapMarket from '../components/lecturer/LecturerSwapMarket'
 import NotificationBell from '../components/NotificationBell'
 
 export default function LecturerDashboard({ profile }) {
@@ -14,6 +15,7 @@ export default function LecturerDashboard({ profile }) {
   const tabs = [
     { id: 'timetable', label: 'My Timetable', icon: '📅' },
     { id: 'availability', label: 'Set Availability', icon: '🕐' },
+    { id: 'swaps', label: 'Swap Market', icon: '🔄' },
   ]
 
   return (
@@ -58,6 +60,7 @@ export default function LecturerDashboard({ profile }) {
         <div style={styles.content}>
           {activeTab === 'timetable' && <LecturerTimetable profile={profile} />}
           {activeTab === 'availability' && <LecturerAvailability profile={profile} />}
+          {activeTab === 'swaps' && <LecturerSwapMarket profile={profile} />}
         </div>
       </div>
     </div>
