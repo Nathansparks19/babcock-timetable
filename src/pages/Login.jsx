@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -22,13 +23,15 @@ export default function Login() {
 
   return (
     <div style={styles.page}>
-      {/* Background Pattern */}
       <div style={styles.bgPattern} />
       <div style={styles.bgGlow} />
 
-      <div style={{ ...styles.container, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(24px)', transition: 'all 0.6s ease' }}>
-
-        {/* Left Panel */}
+      <div style={{
+        ...styles.container,
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? 'translateY(0)' : 'translateY(24px)',
+        transition: 'all 0.6s ease'
+      }}>
         <div style={styles.leftPanel}>
           <div style={styles.leftContent}>
             <img src="/images/babcock-logo.png" alt="Babcock University" style={styles.logo} />
@@ -49,7 +52,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Right Panel */}
         <div style={styles.rightPanel}>
           <div style={styles.formCard}>
             <h2 style={styles.formTitle}>Welcome back</h2>
@@ -67,16 +69,26 @@ export default function Login() {
                   required
                 />
               </div>
+
               <div style={styles.field}>
                 <label style={styles.label}>Password</label>
-                <input
-                  style={styles.input}
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                />
+                <div style={styles.inputWrapper}>
+                  <input
+                    style={styles.inputInner}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    style={styles.eyeBtn}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
 
               {error && (
@@ -86,11 +98,7 @@ export default function Login() {
               )}
 
               <button style={styles.submitBtn} type="submit" disabled={loading}>
-                {loading ? (
-                  <span style={styles.loadingText}>Signing in...</span>
-                ) : (
-                  <span>Sign In →</span>
-                )}
+                {loading ? <span style={styles.loadingText}>Signing in...</span> : <span>Sign In →</span>}
               </button>
             </form>
 
@@ -107,165 +115,96 @@ export default function Login() {
 
 const styles = {
   page: {
-    minHeight: '100vh',
-    background: 'var(--navy-deep)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '24px',
-    position: 'relative',
-    overflow: 'hidden',
+    minHeight: '100vh', background: 'var(--navy-deep)', display: 'flex',
+    alignItems: 'center', justifyContent: 'center', padding: '24px',
+    position: 'relative', overflow: 'hidden',
   },
   bgPattern: {
-    position: 'fixed',
-    inset: 0,
+    position: 'fixed', inset: 0,
     backgroundImage: `radial-gradient(circle at 20% 50%, rgba(201,168,76,0.06) 0%, transparent 50%),
                       radial-gradient(circle at 80% 20%, rgba(15,32,68,0.8) 0%, transparent 50%),
                       repeating-linear-gradient(45deg, rgba(255,255,255,0.01) 0px, rgba(255,255,255,0.01) 1px, transparent 1px, transparent 60px)`,
     pointerEvents: 'none',
   },
   bgGlow: {
-    position: 'fixed',
-    top: '-20%',
-    right: '-10%',
-    width: '600px',
-    height: '600px',
+    position: 'fixed', top: '-20%', right: '-10%', width: '600px', height: '600px',
     background: 'radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%)',
     pointerEvents: 'none',
   },
   container: {
-    display: 'flex',
-    width: '100%',
-    maxWidth: '960px',
-    minHeight: '580px',
-    background: 'rgba(15, 32, 68, 0.6)',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid var(--gold-border)',
-    borderRadius: 'var(--radius-lg)',
-    overflow: 'hidden',
-    boxShadow: 'var(--shadow-elevated)',
-    position: 'relative',
-    zIndex: 1,
+    display: 'flex', width: '100%', maxWidth: '960px', minHeight: '580px',
+    background: 'rgba(15, 32, 68, 0.6)', backdropFilter: 'blur(20px)',
+    border: '1px solid var(--gold-border)', borderRadius: 'var(--radius-lg)',
+    overflow: 'hidden', boxShadow: 'var(--shadow-elevated)', position: 'relative', zIndex: 1,
   },
   leftPanel: {
-    flex: '1',
-    background: 'linear-gradient(135deg, rgba(201,168,76,0.1) 0%, transparent 60%)',
-    borderRight: '1px solid var(--gold-border)',
-    padding: '48px 40px',
-    display: 'flex',
-    alignItems: 'center',
+    flex: '1', background: 'linear-gradient(135deg, rgba(201,168,76,0.1) 0%, transparent 60%)',
+    borderRight: '1px solid var(--gold-border)', padding: '48px 40px', display: 'flex', alignItems: 'center',
   },
   leftContent: { width: '100%' },
   logo: { width: '72px', height: 'auto', marginBottom: '20px' },
   universityName: {
-    fontFamily: 'var(--font-display)',
-    fontSize: '26px',
-    fontWeight: '700',
-    color: 'var(--white)',
-    marginBottom: '12px',
-    lineHeight: '1.2',
+    fontFamily: 'var(--font-display)', fontSize: '26px', fontWeight: '700',
+    color: 'var(--white)', marginBottom: '12px', lineHeight: '1.2',
   },
   divider: {
-    width: '48px',
-    height: '2px',
-    background: 'linear-gradient(90deg, var(--gold), transparent)',
-    marginBottom: '16px',
+    width: '48px', height: '2px',
+    background: 'linear-gradient(90deg, var(--gold), transparent)', marginBottom: '16px',
   },
   tagline: {
-    fontSize: '13px',
-    letterSpacing: '2px',
-    textTransform: 'uppercase',
-    color: 'var(--gold)',
-    marginBottom: '20px',
-    fontWeight: '500',
+    fontSize: '13px', letterSpacing: '2px', textTransform: 'uppercase',
+    color: 'var(--gold)', marginBottom: '20px', fontWeight: '500',
   },
-  description: {
-    fontSize: '14px',
-    color: 'var(--white-40)',
-    lineHeight: '1.7',
-    marginBottom: '32px',
-  },
+  description: { fontSize: '14px', color: 'var(--white-40)', lineHeight: '1.7', marginBottom: '32px' },
   features: { display: 'flex', flexDirection: 'column', gap: '12px' },
   feature: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    fontSize: '13px',
-    color: 'var(--white-70)',
-    animation: 'fadeUp 0.5s ease forwards',
-    opacity: 0,
+    display: 'flex', alignItems: 'center', gap: '10px',
+    fontSize: '13px', color: 'var(--white-70)',
+    animation: 'fadeUp 0.5s ease forwards', opacity: 0,
   },
   featureDot: { color: 'var(--gold)', fontSize: '10px' },
-  rightPanel: {
-    width: '380px',
-    padding: '48px 40px',
-    display: 'flex',
-    alignItems: 'center',
-  },
+  rightPanel: { width: '380px', padding: '48px 40px', display: 'flex', alignItems: 'center' },
   formCard: { width: '100%' },
   formTitle: {
-    fontFamily: 'var(--font-display)',
-    fontSize: '28px',
-    fontWeight: '700',
-    color: 'var(--white)',
-    marginBottom: '6px',
+    fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: '700',
+    color: 'var(--white)', marginBottom: '6px',
   },
-  formSubtitle: {
-    fontSize: '14px',
-    color: 'var(--white-40)',
-    marginBottom: '32px',
-  },
+  formSubtitle: { fontSize: '14px', color: 'var(--white-40)', marginBottom: '32px' },
   form: { display: 'flex', flexDirection: 'column', gap: '20px' },
   field: { display: 'flex', flexDirection: 'column', gap: '8px' },
   label: {
-    fontSize: '12px',
-    fontWeight: '500',
-    color: 'var(--white-70)',
-    letterSpacing: '0.5px',
-    textTransform: 'uppercase',
+    fontSize: '12px', fontWeight: '500', color: 'var(--white-70)',
+    letterSpacing: '0.5px', textTransform: 'uppercase',
   },
   input: {
-    padding: '13px 16px',
-    background: 'var(--white-08)',
-    border: '1px solid var(--white-15)',
-    borderRadius: 'var(--radius-sm)',
-    color: 'var(--white)',
-    fontSize: '14px',
-    outline: 'none',
-    transition: 'var(--transition)',
-    width: '100%',
+    padding: '13px 16px', background: 'var(--white-08)',
+    border: '1px solid var(--white-15)', borderRadius: 'var(--radius-sm)',
+    color: 'var(--white)', fontSize: '14px', outline: 'none', width: '100%',
+  },
+  inputWrapper: {
+    display: 'flex', alignItems: 'center',
+    background: 'var(--white-08)', border: '1px solid var(--white-15)',
+    borderRadius: 'var(--radius-sm)', overflow: 'hidden',
+  },
+  inputInner: {
+    flex: 1, padding: '13px 16px', background: 'transparent',
+    border: 'none', color: 'var(--white)', fontSize: '14px', outline: 'none',
+  },
+  eyeBtn: {
+    background: 'transparent', border: 'none', padding: '0 14px',
+    cursor: 'pointer', fontSize: '16px', color: 'var(--white-40)',
+    display: 'flex', alignItems: 'center',
   },
   errorBox: {
-    background: 'var(--red-pale)',
-    border: '1px solid rgba(224,82,82,0.2)',
-    borderRadius: 'var(--radius-sm)',
-    padding: '12px 16px',
-    color: '#ff8a8a',
-    fontSize: '13px',
+    background: 'var(--red-pale)', border: '1px solid rgba(224,82,82,0.2)',
+    borderRadius: 'var(--radius-sm)', padding: '12px 16px', color: '#ff8a8a', fontSize: '13px',
   },
   submitBtn: {
-    padding: '14px',
-    background: 'linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%)',
-    border: 'none',
-    borderRadius: 'var(--radius-sm)',
-    color: '#1a1200',
-    fontSize: '15px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    marginTop: '8px',
-    letterSpacing: '0.3px',
-    transition: 'var(--transition)',
+    padding: '14px', background: 'linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%)',
+    border: 'none', borderRadius: 'var(--radius-sm)', color: '#1a1200',
+    fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginTop: '8px', letterSpacing: '0.3px',
   },
   loadingText: { opacity: 0.7 },
-  footer: {
-    fontSize: '13px',
-    color: 'var(--white-40)',
-    textAlign: 'center',
-    marginTop: '24px',
-  },
-  link: {
-    color: 'var(--gold)',
-    textDecoration: 'none',
-    fontWeight: '500',
-  },
+  footer: { fontSize: '13px', color: 'var(--white-40)', textAlign: 'center', marginTop: '24px' },
+  link: { color: 'var(--gold)', textDecoration: 'none', fontWeight: '500' },
 }
